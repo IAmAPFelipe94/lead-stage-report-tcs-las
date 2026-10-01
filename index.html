@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lead Stage Report — TCS-LV</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --ink-soft: #5b6472;
+    --paper: #faf9f7;
+    --line: #e4e1db;
+    --accent: #e15b16;
+    --accent-soft: #fdece1;
+    --card: #ffffff;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  header .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 4px 0 0;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: var(--ink-soft); font-size: 14px; margin-top: 6px; max-width: 60ch; }
+
+  .controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input[type="date"] {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  .preset-btn {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-soft);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .generate-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .generate-btn:hover { background: #ca4b02; }
+  .generate-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .status { font-size: 13px; color: var(--ink-soft); margin: -12px 0 20px; min-height: 18px; }
+  .status.error { color: #b3261e; }
+
+  .summary-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .freshness { font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; }
+
+  .download-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .download-btn {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .download-btn:hover { background: #ca4b02; }
+  .download-btn:active { transform: translateY(1px); }
+
+  .view-toggle { display: flex; gap: 6px; margin-bottom: 20px; }
+  .view-toggle-btn {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s ease;
+  }
+  .view-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .view-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .funnel-total { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 20px; }
+  .funnel-section { margin-bottom: 28px; }
+  .funnel-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+  }
+  .funnel-section-total {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .funnel-section h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .funnel-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .funnel-label { font-size: 13px; color: var(--ink); }
+  .funnel-bar-track {
+    background: #efece6;
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+  }
+  .funnel-bar {
+    background: var(--accent);
+    height: 100%;
+    border-radius: 4px;
+    transition: width .3s ease;
+  }
+  .funnel-bar.lost { background: #a8a29a; }
+  .funnel-count { font-size: 13px; font-weight: 600; color: var(--ink); text-align: right; }
+  .funnel-pct { font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+
+  @media (max-width: 640px) {
+    .funnel-row { grid-template-columns: 120px 1fr 70px; }
+    .funnel-label { font-size: 12px; }
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    min-width: 130px;
+  }
+  .summary-card .num { font-size: 24px; font-weight: 700; }
+  .summary-card .label { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .summary-card.total { border-color: var(--accent); background: var(--accent-soft); }
+  .summary-card.total .num { color: var(--accent); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-size: 13.5px;
+  }
+  thead th {
+    text-align: left;
+    background: #f4f2ee;
+    color: var(--ink-soft);
+    font-weight: 600;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 20px;
+  }
+  thead th.sortable:hover { color: var(--accent); }
+  thead th.sortable.sort-asc::after,
+  thead th.sortable.sort-desc::after {
+    position: absolute;
+    right: 6px;
+    font-size: 10px;
+  }
+  thead th.sortable.sort-asc::after { content: "▲"; }
+  thead th.sortable.sort-desc::after { content: "▼"; }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #faf7f3; }
+
+  .stage-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--accent-soft);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+  }
+  .empty-state .big { font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+
+  @media (max-width: 640px) {
+    table, thead, tbody, tr, th, td { display: block; }
+    thead { display: none; }
+    tbody tr { border-bottom: 1px solid var(--line); padding: 12px 14px; }
+    tbody td { border: none; padding: 3px 0; }
+    tbody td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: var(--ink-soft);
+      font-weight: 600;
+      margin-bottom: 1px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">TCS-LV · GHL Pipeline</div>
+      <h1>Lead Stage Report</h1>
+      <div class="subtitle">See where a specific batch of leads stands today — filtered by when they came in, not by when their stage last changed.</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="field">
+      <label for="startDate">Leads created from</label>
+      <input type="date" id="startDate" />
+    </div>
+    <div class="field">
+      <label for="endDate">through</label>
+      <input type="date" id="endDate" />
+    </div>
+    <div class="field">
+      <label>Quick range</label>
+      <div class="presets">
+        <button class="preset-btn" data-preset="last-weekend">Last weekend</button>
+        <button class="preset-btn" data-preset="last-7">Last 7 days</button>
+        <button class="preset-btn" data-preset="this-week">This week</button>
+      </div>
+    </div>
+    <button class="generate-btn" id="generateBtn">Generate Report</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div id="resultsArea"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+  // Set this to the deployed Cloudflare Worker URL for TCS-LV
+  // (clone of Lead_Stage_Report_Worker.js, pointed at the TCS-LV GHL pipeline).
+  const WEB_APP_URL = "https://lead-stage-report-tcs-las.apfelipe94.workers.dev/";
+
+  const startInput = document.getElementById('startDate');
+  const endInput = document.getElementById('endDate');
+  const statusEl = document.getElementById('status');
+  const resultsArea = document.getElementById('resultsArea');
+  const generateBtn = document.getElementById('generateBtn');
+  let currentData = null; // holds the last successful report response, for export
+
+  function fmtDate(d) { return d.toISOString().split('T')[0]; }
+
+  function setPreset(preset) {
+    const today = new Date();
+    let start, end;
+    if (preset === 'last-weekend') {
+      const day = today.getDay(); // 0 = Sunday
+      const lastSunday = new Date(today);
+      lastSunday.setDate(today.getDate() - day - (day === 0 ? 7 : 0));
+      const lastSaturday = new Date(lastSunday);
+      lastSaturday.setDate(lastSunday.getDate() - 1);
+      start = lastSaturday; end = lastSunday;
+    } else if (preset === 'last-7') {
+      end = today;
+      start = new Date(today); start.setDate(today.getDate() - 7);
+    } else if (preset === 'this-week') {
+      const day = today.getDay();
+      start = new Date(today); start.setDate(today.getDate() - day);
+      end = today;
+    }
+    startInput.value = fmtDate(start);
+    endInput.value = fmtDate(end);
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => setPreset(btn.dataset.preset));
+  });
+
+  setPreset('last-weekend');
+
+  async function generateReport() {
+    const start = startInput.value;
+    const end = endInput.value;
+    if (!start || !end) {
+      statusEl.textContent = "Pick both a start and end date.";
+      statusEl.className = "status error";
+      return;
+    }
+    if (WEB_APP_URL.includes("PASTE_YOUR")) {
+      statusEl.textContent = "Dashboard isn't connected yet — set WEB_APP_URL in the page source after deploying the Apps Script as a Web App.";
+      statusEl.className = "status error";
+      return;
+    }
+
+    generateBtn.disabled = true;
+    statusEl.textContent = "Loading…";
+    statusEl.className = "status";
+    resultsArea.innerHTML = "";
+
+    try {
+      const url = `${WEB_APP_URL}?start=${start}&end=${end}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.error) {
+        statusEl.textContent = data.error;
+        statusEl.className = "status error";
+        return;
+      }
+
+      statusEl.textContent = "";
+      sortState = { key: null, direction: 1 };
+      renderResults(data);
+    } catch (err) {
+      statusEl.textContent = "Couldn't load the report. Check the connection and try again.";
+      statusEl.className = "status error";
+      console.error(err);
+    } finally {
+      generateBtn.disabled = false;
+    }
+  }
+
+  let viewMode = 'list'; // 'list' | 'funnel'
+
+  function formatLastUpdated(iso) {
+    if (!iso) return "unknown";
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  function renderResults(data) {
+    currentData = data;
+
+    if (!data.leads || data.leads.length === 0) {
+      resultsArea.innerHTML = `
+        <div class="empty-state">
+          <div class="big">No leads found in this range.</div>
+          Try widening the date range or double-check the dates picked.
+        </div>`;
+      return;
+    }
+
+    const toggleHtml = `
+      <div class="view-toggle">
+        <button class="view-toggle-btn ${viewMode === 'list' ? 'active' : ''}" data-view="list">Lead List</button>
+        <button class="view-toggle-btn ${viewMode === 'funnel' ? 'active' : ''}" data-view="funnel">Sales Funnel</button>
+      </div>
+    `;
+
+    resultsArea.innerHTML = toggleHtml + `<div id="viewArea"></div>`;
+
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        viewMode = btn.dataset.view;
+        renderResults(currentData);
+      });
+    });
+
+    const viewArea = document.getElementById('viewArea');
+    if (viewMode === 'funnel') {
+      renderFunnelView(data, viewArea);
+    } else {
+      renderListView(data, viewArea);
+    }
+  }
+
+  // ==========================================
+  // LIST VIEW — sortable table + exports
+  // ==========================================
+  function renderListView(data, container) {
+    const summaryHtml = `
+      <div class="freshness">Data as of ${formatLastUpdated(data.lastUpdated)} · refreshes every 12 hours</div>
+      <div class="summary-row">
+        <div class="summary-card total">
+          <div class="num">${data.total}</div>
+          <div class="label">Total leads</div>
+        </div>
+        ${Object.entries(data.stageCounts).map(([stage, count]) => `
+          <div class="summary-card">
+            <div class="num">${count}</div>
+            <div class="label">${stage}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    const downloadHtml = `
+      <div class="download-row">
+        <button class="download-btn" id="downloadCsvBtn">Download CSV</button>
+        <button class="download-btn" id="downloadXlsxBtn">Download Excel</button>
+        <button class="download-btn" id="downloadPdfBtn">Download PDF</button>
+      </div>
+    `;
+
+    const rowsHtml = data.leads.map(l => `
+      <tr>
+        <td data-label="Name">${escapeHtml(l.name)}</td>
+        <td data-label="Phone">${escapeHtml(l.phone)}</td>
+        <td data-label="Date Created">${formatDisplayDate(l.dateAdded)}</td>
+        <td data-label="Current Stage"><span class="stage-pill">${escapeHtml(l.stage)}</span></td>
+        <td data-label="Pipeline">${escapeHtml(l.pipeline)}</td>
+        <td data-label="Interested In">${escapeHtml(l.interestedIn)}</td>
+        <td data-label="Ad Source">${escapeHtml(l.adSource)}</td>
+      </tr>
+    `).join('');
+
+    container.innerHTML = `
+      ${summaryHtml}
+      ${downloadHtml}
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-key="name">Name</th>
+            <th class="sortable" data-key="phone">Phone</th>
+            <th class="sortable" data-key="dateAdded">Date Created</th>
+            <th class="sortable" data-key="stage">Current Stage</th>
+            <th class="sortable" data-key="pipeline">Pipeline</th>
+            <th class="sortable" data-key="interestedIn">Interested In</th>
+            <th class="sortable" data-key="adSource">Ad Source</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+
+    document.getElementById('downloadCsvBtn').addEventListener('click', downloadCsv);
+    document.getElementById('downloadXlsxBtn').addEventListener('click', downloadXlsx);
+    document.getElementById('downloadPdfBtn').addEventListener('click', downloadPdf);
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => sortAndRerender(th.dataset.key));
+    });
+    updateSortIndicators();
+  }
+
+  // ==========================================
+  // FUNNEL VIEW — full lead journey, grouped by pipeline + stage
+  // ==========================================
+  // NOTE: TCS-LV's pipeline structure was confirmed via a live pipeline/
+  // stage dump (Oct 2026) and matches DCC's, not Dallas's — it has the
+  // extra "03. Scheduling (Jobs)" pipeline, and its completed-work
+  // pipeline is named "05. Job Complete" (stage "Completed Work"), not
+  // "Completed Work" as a pipeline name. Stage checks are ordered
+  // specifically so "Consult Completed" doesn't get bucketed with
+  // "Consult Scheduled".
+  function classifyLead(l) {
+    const pipeline = (l.pipeline || '').toLowerCase();
+    const stage = (l.stage || '').toLowerCase().trim();
+
+    if (pipeline.includes('new leads') || pipeline.includes('inside sales')) {
+      return { key: 'in_contact', label: 'In Contact (New Lead)', section: 'progress' };
+    }
+    if (pipeline.includes('sales') && (pipeline.includes('estimate') || pipeline.includes('consult'))) {
+      if (stage.includes('sold')) return { key: 'sold', label: 'Sold', section: 'progress' };
+      if (stage.includes('awaiting deposit')) return { key: 'awaiting_deposit', label: 'Awaiting Deposit', section: 'progress' };
+      if (stage.includes('quote') && stage.includes('declined')) return { key: 'declined', label: 'Quote / Design Declined', section: 'lost' };
+      if (stage.includes('quote') && stage.includes('sent')) return { key: 'quote_sent', label: 'Quote / Design Sent', section: 'progress' };
+      if (stage.includes('consult') && stage.includes('cancel')) return { key: 'consult_canceled', label: 'Consult Canceled', section: 'lost' };
+      if (stage.includes('consult') && stage.includes('complete')) return { key: 'consult_completed', label: 'Consult Completed', section: 'progress' };
+      if (stage.includes('consult') && stage.includes('schedul')) return { key: 'consult_scheduled', label: 'Consult Scheduled', section: 'progress' };
+      return { key: 'sales_other', label: `Sales — ${l.stage}`, section: 'progress' };
+    }
+    // "03. Scheduling (Jobs)" — job is sold, now being scheduled and worked.
+    if (pipeline.includes('scheduling') && pipeline.includes('job')) {
+      if (stage.includes('cancel')) return { key: 'job_canceled', label: 'Job Canceled', section: 'lost' };
+      if (stage.includes('complete')) return { key: 'installed', label: 'Installed / Completed', section: 'progress' };
+      if (stage.includes('to be scheduled')) return { key: 'job_to_schedule', label: 'To Be Scheduled', section: 'progress' };
+      if (stage.includes('schedul')) return { key: 'job_scheduled', label: 'Job Scheduled', section: 'progress' };
+      return { key: 'job_other', label: `Scheduling — ${l.stage}`, section: 'progress' };
+    }
+    // "05. Job Complete" pipeline (stage: "Completed Work") — matched by
+    // pipeline name, not stage name.
+    if (pipeline.includes('job complete')) {
+      return { key: 'installed', label: 'Installed / Completed', section: 'progress' };
+    }
+    if (pipeline.includes('existing customer')) {
+      return { key: 'existing_client', label: 'Existing Client', section: 'progress' };
+    }
+    if (pipeline.includes('future follow')) {
+      return { key: 'future_followup', label: 'Future Follow-up', section: 'progress' };
+    }
+    if (pipeline.includes('cold lead')) {
+      if (stage.includes('non viable') || stage.includes('non-viable') || stage.includes('junk')) return { key: 'not_viable', label: 'Not Viable / Junk', section: 'lost' };
+      if (stage.includes('too expensive')) return { key: 'too_expensive', label: 'Too Expensive', section: 'lost' };
+      if (stage.includes('not interested')) return { key: 'not_interested', label: 'Not Interested', section: 'lost' };
+      if (stage.includes('quote given')) return { key: 'quote_no_response', label: 'Quote Given – No Response', section: 'lost' };
+      if (stage.includes('no response')) return { key: 'no_response', label: 'No Response', section: 'lost' };
+      if (stage.includes('non working phone')) return { key: 'bad_number', label: 'Non-Working Phone #', section: 'lost' };
+      if (stage.includes("didn't call") || stage.includes('did not call')) return { key: 'didnt_call', label: "Lead Says They Didn't Call", section: 'lost' };
+      if (stage.includes('out of area')) return { key: 'out_of_area', label: 'Out of Area', section: 'lost' };
+      return { key: 'cold_other', label: `Cold Lead — ${l.stage}`, section: 'lost' };
+    }
+    return { key: 'other', label: `${l.pipeline || 'Unknown'} — ${l.stage || 'Unknown'}`, section: 'progress' };
+  }
+
+  const PROGRESS_ORDER = ['in_contact', 'consult_scheduled', 'consult_completed', 'quote_sent', 'awaiting_deposit', 'sold', 'job_to_schedule', 'job_scheduled', 'installed', 'existing_client', 'future_followup', 'sales_other', 'job_other', 'other'];
+  const LOST_ORDER = ['not_viable', 'not_interested', 'too_expensive', 'no_response', 'quote_no_response', 'declined', 'consult_canceled', 'job_canceled', 'bad_number', 'didnt_call', 'out_of_area', 'cold_other'];
+
+  function renderFunnelView(data, container) {
+    const buckets = {}; // key -> { label, count, section }
+    data.leads.forEach(l => {
+      const c = classifyLead(l);
+      if (!buckets[c.key]) buckets[c.key] = { label: c.label, count: 0, section: c.section };
+      buckets[c.key].count++;
+    });
+
+    const total = data.leads.length;
+    const maxCount = Math.max(1, ...Object.values(buckets).map(b => b.count));
+
+    function sectionTotal(orderKeys) {
+      return orderKeys.reduce((sum, k) => sum + (buckets[k] ? buckets[k].count : 0), 0);
+    }
+
+    function renderBarGroup(orderKeys, title, sortByCount) {
+      const keysToRender = sortByCount
+        ? orderKeys.filter(k => buckets[k]).sort((a, b) => buckets[b].count - buckets[a].count)
+        : orderKeys.filter(k => buckets[k]);
+
+      const rows = keysToRender
+        .map(k => {
+          const b = buckets[k];
+          const pct = ((b.count / total) * 100).toFixed(1);
+          const widthPct = ((b.count / maxCount) * 100).toFixed(1);
+          const barClass = b.section === 'lost' ? 'funnel-bar lost' : 'funnel-bar';
+          return `
+            <div class="funnel-row">
+              <div class="funnel-label">${escapeHtml(b.label)}</div>
+              <div class="funnel-bar-track">
+                <div class="${barClass}" style="width:${widthPct}%"></div>
+              </div>
+              <div class="funnel-count">${b.count} <span class="funnel-pct">(${pct}%)</span></div>
+            </div>
+          `;
+        }).join('');
+      if (!rows) return '';
+
+      const groupTotal = sectionTotal(orderKeys);
+      const groupPct = ((groupTotal / total) * 100).toFixed(1);
+      return `
+        <div class="funnel-section">
+          <div class="funnel-section-header">
+            <h3>${title}</h3>
+            <span class="funnel-section-total">${groupTotal} (${groupPct}%)</span>
+          </div>
+          ${rows}
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="freshness">Data as of ${formatLastUpdated(data.lastUpdated)} · refreshes every 12 hours</div>
+      <div class="funnel-total">${total} leads in this range</div>
+      ${renderBarGroup(PROGRESS_ORDER, 'Sales Journey', false)}
+      ${renderBarGroup(LOST_ORDER, 'Lost / Not Converted', true)}
+    `;
+  }
+
+  let sortState = { key: null, direction: 1 }; // 1 = ascending, -1 = descending
+
+  function sortAndRerender(key) {
+    if (sortState.key === key) {
+      sortState.direction *= -1;
+    } else {
+      sortState.key = key;
+      sortState.direction = 1;
+    }
+
+    currentData.leads.sort((a, b) => {
+      let valA = a[key], valB = b[key];
+      if (key === 'dateAdded') {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      } else {
+        valA = String(valA || '').toLowerCase();
+        valB = String(valB || '').toLowerCase();
+      }
+      if (valA < valB) return -1 * sortState.direction;
+      if (valA > valB) return 1 * sortState.direction;
+      return 0;
+    });
+
+    renderResults(currentData);
+  }
+
+  function updateSortIndicators() {
+    if (!sortState.key) return;
+    const th = document.querySelector(`th.sortable[data-key="${sortState.key}"]`);
+    if (th) th.classList.add(sortState.direction === 1 ? 'sort-asc' : 'sort-desc');
+  }
+
+  function exportRows() {
+    return currentData.leads.map(l => ({
+      Name: l.name,
+      Phone: l.phone,
+      Email: l.email,
+      'Date Created': formatDisplayDate(l.dateAdded),
+      Pipeline: l.pipeline,
+      'Current Stage': l.stage,
+      'Interested In': l.interestedIn,
+      'Ad Source': l.adSource,
+      Value: l.value,
+    }));
+  }
+
+  function exportFilename(ext) {
+    return `Lead Stage Report ${currentData.startDate} to ${currentData.endDate}.${ext}`;
+  }
+
+  function downloadCsv() {
+    const rows = exportRows();
+    const headers = Object.keys(rows[0]);
+    const escapeCsv = (val) => {
+      const str = String(val ?? '');
+      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+    const csvLines = [
+      headers.join(','),
+      ...rows.map(r => headers.map(h => escapeCsv(r[h])).join(',')),
+    ];
+    const blob = new Blob([csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    triggerDownload(blob, exportFilename('csv'));
+  }
+
+  function downloadXlsx() {
+    const rows = exportRows();
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Lead Stage Report');
+    XLSX.writeFile(wb, exportFilename('xlsx'));
+  }
+
+  function downloadPdf() {
+    const rows = exportRows();
+    const headers = Object.keys(rows[0]);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+
+    doc.setFontSize(14);
+    doc.text('Lead Stage Report', 40, 32);
+    doc.setFontSize(10);
+    doc.setTextColor(90, 90, 90);
+    doc.text(
+      `Leads created ${formatDisplayDate(currentData.startDate)} – ${formatDisplayDate(currentData.endDate)}  •  ${currentData.total} leads`,
+      40, 48
+    );
+
+    doc.autoTable({
+      startY: 62,
+      head: [headers],
+      body: rows.map(r => headers.map(h => String(r[h] ?? ''))),
+      styles: { fontSize: 8, cellPadding: 5 },
+      headStyles: { fillColor: [225, 91, 22], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [250, 249, 247] },
+      margin: { left: 40, right: 40 },
+    });
+
+    doc.save(exportFilename('pdf'));
+  }
+
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function formatDisplayDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  generateBtn.addEventListener('click', generateReport);
+</script>
+</body>
+</html>
